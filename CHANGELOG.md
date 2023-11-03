@@ -1,10 +1,12 @@
-# v0.5.0 [Unreleased]
-
-## Notice
-* llama.cpp backend (CPU, Metal) now requires a redownload of gguf model due to upstream format changes: https://github.com/TabbyML/tabby/pull/645 https://github.com/ggerganov/llama.cpp/pull/3252
-* Due to indexing format changes, the `~/.tabby/index` needs to be manually removed before any further runs of `tabby scheduler`.
+# v0.6.0 [Unreleased]
 
 ## Features
+
+# v0.5.0
+
+## Features
+
+* Improved dashboard UI.
 
 ## Fixes and Improvements
 
