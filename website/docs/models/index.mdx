@@ -8,10 +8,10 @@ import GitHubReadme from "./readme";
 
 <GitHubReadme src="https://raw.githubusercontent.com/TabbyML/registry-tabby/main/README.md" />
 
-## Alternative Registry
+## Model Mirrors
 
-By default, Tabby utilizes the [Hugging Face organization](https://huggingface.co/TabbyML) as its model registry. Mainland Chinese users have encountered challenges accessing Hugging Face for various reasons. The Tabby team has established a mirrored at [modelscope](https://www.modelscope.cn/organization/TabbyML), which can be utilized using the following environment variable:
+Mainland Chinese users might encounter challenges accessing Hugging Face. For models with mirrored to modelscope, you could download model by utilizing following environment variable:
 
 ```bash
-TABBY_REGISTRY=modelscope tabby serve --model TabbyML/StarCoder-1B
+TABBY_DOWNLOAD_HOST=modelscope.cn tabby serve --model TabbyML/StarCoder-1B
 ```
