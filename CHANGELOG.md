@@ -4,6 +4,12 @@
 
 # v0.5.0
 
+## Notice
+
+* llama.cpp backend (CPU, Metal) now requires a redownload of gguf model due to upstream format changes: https://github.com/TabbyML/tabby/pull/645 https://github.com/ggerganov/llama.cpp/pull/3252
+* Due to indexing format changes, the `~/.tabby/index` needs to be manually removed before any further runs of `tabby scheduler`.
+* `TABBY_REGISTRY` is replaced with `TABBY_DOWNLOAD_HOST` for the github based registry implementation.
+
 ## Features
 
 * Improved dashboard UI.
