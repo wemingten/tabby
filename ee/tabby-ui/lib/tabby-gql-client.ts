@@ -3,7 +3,7 @@ import { GraphQLClient, Variables, RequestOptions } from 'graphql-request'
 export const graphQLClient = new GraphQLClient(
   `${process.env.NEXT_PUBLIC_TABBY_SERVER_URL ?? ''}/graphql`,
   {
-    credentials: 'include',
+    // credentials: 'include',
     mode: 'cors'
   }
 )
