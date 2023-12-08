@@ -103,10 +103,24 @@ impl DbConn {
 
         Ok(users)
     }
+
+    pub async fn reset_auth_token(&self, id: i32) -> Result<i32> {
+        self.conn
+            .call(move |c| {
+                let mut stmt = c.prepare(r#"UPDATE users SET auth_token = ? WHERE id = ?"#)?;
+                stmt.execute((Uuid::new_v4().to_string(), id))?;
+                Ok(())
+            })
+            .await?;
+
+        Ok(id)
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use futures::TryFutureExt;
+
     use super::*;
     use crate::service::db::testutils::create_user;
 
@@ -127,5 +141,19 @@ mod tests {
         let user = conn.get_user_by_email(email).await.unwrap();
 
         assert!(user.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_auth_token() {
+        let conn = DbConn::new_in_memory().await.unwrap();
+        let id = create_user(&conn).await;
+
+        let user = conn.get_user(id).await.unwrap().unwrap();
+        assert!(Uuid::parse_str(&user.auth_token).is_ok());
+
+        conn.reset_auth_token(id).await.unwrap();
+        let new_user = conn.get_user(id).await.unwrap().unwrap();
+        assert_eq!(user.email, new_user.email);
+        assert_ne!(user.auth_token, new_user.auth_token);
     }
 }
