@@ -220,7 +220,7 @@ impl AuthenticationService for DbConn {
         Ok(resp)
     }
 
-    async fn verify_token(&self, access_token: String) -> Result<VerifyTokenResponse> {
+    async fn verify_access_token(&self, access_token: String) -> Result<VerifyTokenResponse> {
         let claims = validate_jwt(&access_token)?;
         let resp = VerifyTokenResponse::new(claims);
         Ok(resp)

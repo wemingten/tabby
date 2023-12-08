@@ -16,6 +16,7 @@ use super::from_validation_errors;
 
 lazy_static! {
     static ref JWT_TOKEN_SECRET: String  = jwt_token_secret();
+
     static ref JWT_ENCODING_KEY: jwt::EncodingKey = jwt::EncodingKey::from_secret(
         JWT_TOKEN_SECRET.as_bytes()
     );
@@ -41,7 +42,9 @@ fn jwt_token_secret() -> String {
     let jwt_secret = match std::env::var("TABBY_WEBSERVER_JWT_TOKEN_SECRET") {
         Ok(x) => x,
         Err(_) => {
-            warn!(r"TABBY_WEBSERVER_JWT_TOKEN_SECRET is not set. Tabby generates a one-time (non-persisted) JWT token solely for testing purposes.");
+            warn!(
+                r"TABBY_WEBSERVER_JWT_TOKEN_SECRET is not set. Tabby generates a one-time (non-persisted) JWT token solely for testing purposes."
+            );
             Uuid::new_v4().to_string()
         }
     };
@@ -277,7 +280,7 @@ pub trait AuthenticationService: Send + Sync {
         &self,
         refresh_token: String,
     ) -> std::result::Result<RefreshTokenResponse, RefreshTokenError>;
-    async fn verify_token(&self, access_token: String) -> Result<VerifyTokenResponse>;
+    async fn verify_access_token(&self, access_token: String) -> Result<VerifyTokenResponse>;
     async fn is_admin_initialized(&self) -> Result<bool>;
 
     async fn create_invitation(&self, email: String) -> Result<i32>;

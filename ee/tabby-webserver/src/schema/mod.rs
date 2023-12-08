@@ -142,7 +142,7 @@ impl Mutation {
     }
 
     async fn verify_token(ctx: &Context, token: String) -> Result<VerifyTokenResponse> {
-        Ok(ctx.locator.auth().verify_token(token).await?)
+        Ok(ctx.locator.auth().verify_access_token(token).await?)
     }
 
     async fn refresh_token(
