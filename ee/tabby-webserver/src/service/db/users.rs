@@ -3,6 +3,7 @@
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use rusqlite::{params, OptionalExtension, Row};
+use uuid::Uuid;
 
 use super::DbConn;
 
@@ -15,11 +16,14 @@ pub struct User {
     pub email: String,
     pub password_encrypted: String,
     pub is_admin: bool,
+
+    /// To authenticate IDE extensions / plugins to access code completion / chat api endpoints.
+    auth_token: String,
 }
 
 impl User {
     fn select(clause: &str) -> String {
-        r#"SELECT id, email, password_encrypted, is_admin, created_at, updated_at FROM users WHERE "#
+        r#"SELECT id, email, password_encrypted, is_admin, created_at, updated_at, auth_token FROM users WHERE "#
             .to_owned()
             + clause
     }
@@ -32,6 +36,7 @@ impl User {
             is_admin: row.get(3)?,
             created_at: row.get(4)?,
             updated_at: row.get(5)?,
+            auth_token: row.get(6)?,
         })
     }
 }
@@ -47,9 +52,9 @@ impl DbConn {
             .conn
             .call(move |c| {
                 let mut stmt = c.prepare(
-                    r#"INSERT INTO users (email, password_encrypted, is_admin) VALUES (?, ?, ?)"#,
+                    r#"INSERT INTO users (email, password_encrypted, is_admin, auth_token) VALUES (?, ?, ?, ?)"#,
                 )?;
-                let id = stmt.insert((email, password_encrypted, is_admin))?;
+                let id = stmt.insert((email, password_encrypted, is_admin, Uuid::new_v4().to_string()))?;
                 Ok(id)
             })
             .await?;

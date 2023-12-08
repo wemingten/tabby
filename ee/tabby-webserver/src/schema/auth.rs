@@ -8,17 +8,19 @@ use juniper::{FieldError, GraphQLObject, IntoFieldError, ScalarValue};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use tracing::{error, warn};
 use uuid::Uuid;
 use validator::ValidationErrors;
 
 use super::from_validation_errors;
 
 lazy_static! {
+    static ref JWT_TOKEN_SECRET: String  = jwt_token_secret();
     static ref JWT_ENCODING_KEY: jwt::EncodingKey = jwt::EncodingKey::from_secret(
-        jwt_token_secret().as_bytes()
+        JWT_TOKEN_SECRET.as_bytes()
     );
     static ref JWT_DECODING_KEY: jwt::DecodingKey = jwt::DecodingKey::from_secret(
-        jwt_token_secret().as_bytes()
+        JWT_TOKEN_SECRET.as_bytes()
     );
     static ref JWT_DEFAULT_EXP: u64 = 30 * 60; // 30 minutes
 }
@@ -36,7 +38,19 @@ pub fn validate_jwt(token: &str) -> jwt::errors::Result<Claims> {
 }
 
 fn jwt_token_secret() -> String {
-    std::env::var("TABBY_WEBSERVER_JWT_TOKEN_SECRET").unwrap_or("default_secret".to_string())
+    let jwt_secret = match std::env::var("TABBY_WEBSERVER_JWT_TOKEN_SECRET") {
+        Ok(x) => x,
+        Err(_) => {
+            warn!(r"TABBY_WEBSERVER_JWT_TOKEN_SECRET is not set. Tabby generates a one-time (non-persisted) JWT token solely for testing purposes.");
+            Uuid::new_v4().to_string()
+        }
+    };
+
+    if uuid::Uuid::parse_str(&jwt_secret).is_err() {
+        warn!("JWT token secret needs to be in standard uuid format to ensure its security, you might generate one at https://www.uuidgenerator.net");
+    }
+
+    jwt_secret
 }
 
 pub fn generate_refresh_token() -> String {
