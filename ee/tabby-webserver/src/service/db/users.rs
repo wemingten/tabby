@@ -104,6 +104,21 @@ impl DbConn {
         Ok(users)
     }
 
+    pub async fn verify_auth_token(&self, token: &str) -> bool {
+        let token = token.to_owned();
+        let id: Result<i32, _> = self
+            .conn
+            .call(move |c| {
+                c.query_row(
+                    r#"SELECT id FROM users WHERE auth_token = ?"#,
+                    params![token],
+                    |row| row.get(0),
+                )
+            })
+            .await;
+        id.is_ok()
+    }
+
     pub async fn reset_auth_token(&self, id: i32) -> Result<i32> {
         self.conn
             .call(move |c| {
@@ -119,8 +134,6 @@ impl DbConn {
 
 #[cfg(test)]
 mod tests {
-    use futures::TryFutureExt;
-
     use super::*;
     use crate::service::db::testutils::create_user;
 
@@ -150,6 +163,10 @@ mod tests {
 
         let user = conn.get_user(id).await.unwrap().unwrap();
         assert!(Uuid::parse_str(&user.auth_token).is_ok());
+
+        assert!(!conn.verify_auth_token("abcd").await);
+
+        assert!(conn.verify_auth_token(&user.auth_token).await);
 
         conn.reset_auth_token(id).await.unwrap();
         let new_user = conn.get_user(id).await.unwrap().unwrap();
