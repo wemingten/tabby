@@ -52,7 +52,7 @@ impl ServerContext {
            // Authorization is enabled
            && self.db_conn.is_admin_initialized().await.unwrap_or(false)
         {
-            let auth_token = {
+            let token = {
                 let authorization = request
                     .headers()
                     .get("authorization")
@@ -71,8 +71,10 @@ impl ServerContext {
                 }
             };
 
-            if let Some(auth_token) = auth_token {
-                if !self.db_conn.verify_auth_token(auth_token).await {
+            if let Some(token) = token {
+                if !self.db_conn.verify_access_token(token).await.is_ok()
+                    && !self.db_conn.verify_auth_token(token).await
+                {
                     return false;
                 }
             } else {

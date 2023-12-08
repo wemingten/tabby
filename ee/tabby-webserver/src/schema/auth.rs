@@ -42,8 +42,12 @@ fn jwt_token_secret() -> String {
     let jwt_secret = match std::env::var("TABBY_WEBSERVER_JWT_TOKEN_SECRET") {
         Ok(x) => x,
         Err(_) => {
-            warn!(
-                r"TABBY_WEBSERVER_JWT_TOKEN_SECRET is not set. Tabby generates a one-time (non-persisted) JWT token solely for testing purposes."
+            eprintln!("
+    \x1b[93;1mJWT secret is not set\x1b[0m
+
+    Tabby server will generate a one-time (non-persisted) JWT secret for the current process.
+    Please set the \x1b[94mTABBY_WEBSERVER_JWT_TOKEN_SECRET\x1b[0m environment variable for production usage.
+"
             );
             Uuid::new_v4().to_string()
         }
@@ -51,6 +55,7 @@ fn jwt_token_secret() -> String {
 
     if uuid::Uuid::parse_str(&jwt_secret).is_err() {
         warn!("JWT token secret needs to be in standard uuid format to ensure its security, you might generate one at https://www.uuidgenerator.net");
+        std::process::exit(1)
     }
 
     jwt_secret
@@ -280,7 +285,7 @@ pub trait AuthenticationService: Send + Sync {
         &self,
         refresh_token: String,
     ) -> std::result::Result<RefreshTokenResponse, RefreshTokenError>;
-    async fn verify_access_token(&self, access_token: String) -> Result<VerifyTokenResponse>;
+    async fn verify_access_token(&self, access_token: &str) -> Result<VerifyTokenResponse>;
     async fn is_admin_initialized(&self) -> Result<bool>;
 
     async fn create_invitation(&self, email: String) -> Result<i32>;
@@ -293,7 +298,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_generate_jwt() {
-        let claims = Claims::new(UserInfo::new("test".to_string(), false));
+        let claims = Claims::new(UserInfo::new("test".to_string(), false, "cde".to_owned()));
         let token = generate_jwt(claims).unwrap();
 
         assert!(!token.is_empty())
@@ -301,12 +306,13 @@ mod tests {
 
     #[test]
     fn test_validate_jwt() {
-        let claims = Claims::new(UserInfo::new("test".to_string(), false));
+        let user = UserInfo::new("test".to_string(), false, "cde".to_owned());
+        let claims = Claims::new(user.clone());
         let token = generate_jwt(claims).unwrap();
         let claims = validate_jwt(&token).unwrap();
         assert_eq!(
             claims.user_info(),
-            &UserInfo::new("test".to_string(), false)
+            &user,
         );
     }
 

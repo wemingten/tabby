@@ -18,7 +18,7 @@ pub struct User {
     pub is_admin: bool,
 
     /// To authenticate IDE extensions / plugins to access code completion / chat api endpoints.
-    auth_token: String,
+    pub auth_token: String,
 }
 
 impl User {
@@ -54,7 +54,7 @@ impl DbConn {
                 let mut stmt = c.prepare(
                     r#"INSERT INTO users (email, password_encrypted, is_admin, auth_token) VALUES (?, ?, ?, ?)"#,
                 )?;
-                let id = stmt.insert((email, password_encrypted, is_admin, Uuid::new_v4().to_string()))?;
+                let id = stmt.insert((email, password_encrypted, is_admin, generate_auth_token()))?;
                 Ok(id)
             })
             .await?;
@@ -130,6 +130,11 @@ impl DbConn {
 
         Ok(id)
     }
+}
+
+fn generate_auth_token() -> String {
+    let uuid = Uuid::new_v4().to_string().replace("-", "");
+    format!("auth_{}", uuid)
 }
 
 #[cfg(test)]
