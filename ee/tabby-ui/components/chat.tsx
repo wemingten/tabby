@@ -11,12 +11,13 @@ import { useStore } from '@/lib/hooks/use-store'
 import { addChat, updateMessages } from '@/lib/stores/chat-actions'
 import { useChatStore } from '@/lib/stores/chat-store'
 import type { MessageActionType } from '@/lib/types'
-import { cn, nanoid, truncateText } from '@/lib/utils'
+import { cn, fetchGeneratedTitle, nanoid, } from '@/lib/utils'
 import { ChatList } from '@/components/chat-list'
 import { ChatPanel } from '@/components/chat-panel'
 import { ChatScrollAnchor } from '@/components/chat-scroll-anchor'
 import { EmptyScreen } from '@/components/empty-screen'
 import { ListSkeleton } from '@/components/skeleton'
+import { useSession } from '@/lib/tabby/auth'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -95,9 +96,11 @@ export function Chat({ id, initialMessages, loading, className }: ChatProps) {
     }
   }
 
+  const { data: session } = useSession();
+
   const handleSubmit = async (value: string) => {
     if (findIndex(chats, { id }) === -1) {
-      addChat(id, truncateText(value))
+      fetchGeneratedTitle(value, session?.accessToken).then(title => addChat(id, title));
     } else if (selectedMessageId) {
       let messageIdx = findIndex(messages, { id: selectedMessageId })
       setMessages(messages.slice(0, messageIdx))

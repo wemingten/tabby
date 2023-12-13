@@ -42,7 +42,7 @@ export function formatDate(input: string | number | Date): string {
   })
 }
 
-export function truncateText(
+function truncateText(
   text: string,
   maxLength = 50,
   delimiters = /[ ,.:;\n，。：；]/
@@ -67,4 +67,28 @@ export function truncateText(
   }
 
   return truncatedText + '...'
+}
+
+export async function fetchGeneratedTitle(text: string, accessToken?: string) {
+  if (!accessToken) return "(Untitled)";
+  const serverUrl = process.env.NEXT_PUBLIC_TABBY_SERVER_URL || ''
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json'
+  }
+  headers['Authorization'] = `Bearer ${accessToken}`
+  const res = await fetch(`${serverUrl}/v1beta/chat/completions`, {
+    headers,
+    body: JSON.stringify({
+      messages: [
+        { role: "user", content: "Please summarize content after '===' into a single sentence, do not use any quotes:\n===\n" + text }
+      ]
+    }),
+    method: "POST"
+  });
+
+  const data = await res.text();
+  let title = data.split(/\r?\n/).filter(x => x.trim()).map(x => JSON.parse(x.trim()).content).join("").trim();
+  if (title.startsWith("\"")) title = title.slice(1);
+  if (title.endsWith("\"")) title = title.slice(0, title.length - 1)
+  return truncateText(title);
 }
