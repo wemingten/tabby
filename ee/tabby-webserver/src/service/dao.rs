@@ -153,9 +153,15 @@ pub trait AsID {
     fn as_id(&self) -> juniper::ID;
 }
 
-impl AsID for i32 {
+impl AsID for i64 {
     fn as_id(&self) -> juniper::ID {
         juniper::ID::new(HASHER.encode(&[*self as u64]))
+    }
+}
+
+impl AsID for i32 {
+    fn as_id(&self) -> juniper::ID {
+        (*self as i64).as_id()
     }
 }
 
